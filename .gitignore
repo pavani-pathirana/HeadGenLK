@@ -1,0 +1,83 @@
+# Python 
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+wheels/
+sdist/
+
+#Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.env/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Model weights and large files 
+
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+*.h5
+*.pkl
+*.joblib
+models/checkpoints/
+backend/models/weights/
+
+# HuggingFace cache 
+
+.cache/
+~/.cache/huggingface/
+
+# Streamlit 
+.streamlit/secrets.toml
+
+# Jupyter / IPython 
+.ipynb_checkpoints/
+*.ipynb
+
+# Data and exports 
+data/raw/
+data/processed/
+*.csv
+*.tsv
+*.json
+!frontend/components/__init__.py
+!backend/models/__init__.py
+!backend/utils/__init__.py
+
+# Logs 
+*.log
+logs/
+
+# OS files 
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
