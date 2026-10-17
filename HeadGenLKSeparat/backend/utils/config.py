@@ -2,13 +2,13 @@ import streamlit as st
 # Configuration & Constants for HeadGenLK
 
 # API Configuration
-GEMINI_API_KEY = "AIzaSyDWTTILZSaoewZ_sb-yin65ElD1wvh3z2Y"
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 
 # Model Paths
 BASE_MODEL_PATH = "facebook/mbart-large-50"
 # ADAPTER_PATH = "./final_sinhala_mbart_lora_model/final_sinhala_mbart_lora_model"
 HF_TOKEN = st.secrets["HF_TOKEN"]
-ADAPTER_PATH = "pava0000/final-sinhala-mbart-lora"
+ADAPTER_PATH = "pava0000/final_sinhala_mbart_lora_model"
 
 # Model Parameters
 MAX_INPUT_LENGTH = 800
