@@ -19,7 +19,7 @@ def init_services():
     }
 
 # Main Application
- def main():
+def main():
     """Main Streamlit application"""
     
     # Page configuration
@@ -29,9 +29,9 @@ def init_services():
         initial_sidebar_state="expanded"
     )
     
-    # Title
-    st.title(" Sinhala News Headline Generation System")
-    st.markdown("---")
+    # # Title
+    # st.title(" Sinhala News Headline Generation System")
+    # st.markdown("---")
     
     # Initialize services
     services = init_services()
@@ -74,8 +74,7 @@ def init_services():
             st.warning(" Please enter an article body.")
     
     # Results Display
-     
-        if 'tr' in st.session_state:
+    if 'tr' in st.session_state:
         UIComponents.render_results(st.session_state, ref_headline, metrics_calc)
         UIComponents.render_final_selection()
          

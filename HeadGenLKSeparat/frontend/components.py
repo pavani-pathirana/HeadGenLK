@@ -321,7 +321,7 @@ class UIComponents:
 
     @staticmethod
     def render_final_selection():
-        """Render final model selection radio and log button"""
+        """render final model selection radio and log button"""
         st.divider()
 
         st.markdown(
@@ -347,7 +347,7 @@ class UIComponents:
             st.write(" ")
             st.write(" ")
             if st.button("Log Selection", use_container_width=True):
-                st.toast(f"Assessment logged: {final_choice}", icon="✅")
+                st.toast(f"Assessment logged: {final_choice}", icon="")
                 st.success(f"Logged {final_choice} for evaluation.")
 
         return final_choice

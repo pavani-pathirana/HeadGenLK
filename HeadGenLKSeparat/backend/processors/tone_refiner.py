@@ -27,7 +27,7 @@ class ToneRefiner:
             return headline
         
         try:
-            gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+            gemini_model = genai.GenerativeModel("gemini-2.5-flash")
             prompt = self._build_prompt(headline, tone)
             response = gemini_model.generate_content(prompt)
             return response.text.strip()
