@@ -1,5 +1,5 @@
 streamlit>=1.40.0
-torch --index-url https://download.pytorch.org/whl/cpu
+torch
 transformers>=4.40.0
 peft>=0.11.0
 scikit-learn>=1.5.0
