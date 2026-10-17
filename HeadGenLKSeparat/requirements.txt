@@ -2,7 +2,7 @@ streamlit==1.31.1
 torch==2.11.0
 transformers==4.36.0
 peft==0.7.1
-scikit-learn==1.4.2
+#scikit-learn==1.4.2
 networkx==3.2
 rouge-score==0.1.2
 sacrebleu==2.4.0
