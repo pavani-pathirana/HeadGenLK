@@ -4,7 +4,11 @@ import streamlit as st
 import torch
 from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 from peft import PeftModel
-from backend.utils.config import BASE_MODEL_PATH, ADAPTER_PATH
+from backend.utils.config import (
+    BASE_MODEL_PATH,
+    ADAPTER_PATH,
+    HF_TOKEN,
+)
 
 
 @st.cache_resource
@@ -24,7 +28,11 @@ def load_models():
     )
     
     # Load LoRA adapter
-    model = PeftModel.from_pretrained(base_model, ADAPTER_PATH)
+    model = PeftModel.from_pretrained(
+    base_model,
+    ADAPTER_PATH,
+    token=HF_TOKEN,
+)
     model = model.to(device)
     model.eval()
     
