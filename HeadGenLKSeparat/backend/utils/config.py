@@ -21,10 +21,18 @@ TEXTRANK_POSITION_BIAS = 0.15
 
 # Style Prompts for Sinhala Headlines
 STYLE_PROMPTS = {
-    "Standard": "",
-    "Trendy": "ට්‍රෙන්ඩි: ",
-    "Serious": "බැරෑරුම්: ",
-    "Short": "කෙටි: "
+    "Standard": "Keep the original neutral news style.",
+    "Trendy": "Use modern, attention-grabbing wording while remaining accurate.",
+    "Serious": "Use formal, objective, and authoritative wording.",
+    "Short": "Make the headline very brief and concise.",
+    "Breaking News": "Emphasize urgency and the most important immediate event.",
+    "Neutral": "Use completely objective and unbiased news language.",
+    "Political": "Use formal political-news wording and preserve political facts.",
+    "Sports": "Use energetic sports-news language and highlight the event or result.",
+    "Business": "Use professional business and economic-news language.",
+    "Emotional": "Use emotionally engaging wording without exaggeration or false claims.",
+    "Question": "Rewrite the headline as a clear and informative question.",
+    "Social Media": "Use concise, engaging wording suitable for a news social-media post.",
 }
 
 # UI Settings

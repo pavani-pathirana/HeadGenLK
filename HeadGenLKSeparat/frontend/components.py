@@ -1,5 +1,9 @@
 """UI"""
 
+import csv
+import io
+from datetime import datetime, timezone
+
 import streamlit as st
 
 
@@ -212,7 +216,20 @@ class UIComponents:
 
         style = st.sidebar.selectbox(
             "Headline Tone",
-            ["Standard", "Trendy", "Serious", "Short"],
+            [
+                "Standard",
+                "Trendy",
+                "Serious",
+                "Short",
+                "Breaking News",
+                "Neutral",
+                "Political",
+                "Sports",
+                "Business",
+                "Emotional",
+                "Question",
+                "Social Media",
+            ],
             help="Choose the tone and style for the generated headline.",
         )
 
@@ -248,6 +265,53 @@ class UIComponents:
         return article
 
     @staticmethod
+    def render_metric_list(title, scores):
+        metrics = [
+            ("ROUGE-1", scores["rouge1"]),
+            ("ROUGE-2", scores["rouge2"]),
+            ("ROUGE-L", scores["rougeL"]),
+            ("SacreBLEU", scores["sacrebleu"]),
+            ("NLTK BLEU", scores["nltk_bleu"]),
+        ]
+
+        rows = "".join(
+            f"""
+            <div style="
+                display:flex;
+                justify-content:space-between;
+                padding:8px 0;
+                border-bottom:1px solid #222938;
+            ">
+                <span style="color:#94A3B8;">{label}</span>
+                <strong style="color:#34D399;">{value:.2f}</strong>
+            </div>
+            """
+            for label, value in metrics
+        )
+
+        st.markdown(
+            f"""
+            <div style="
+                background:#11141B;
+                border:1px solid #222938;
+                border-radius:12px;
+                padding:12px;
+                margin-top:10px;
+            ">
+                <div style="
+                    color:#F8FAFC;
+                    font-weight:700;
+                    margin-bottom:6px;
+                ">
+                    {title}
+                </div>
+                {rows}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    @staticmethod
     def render_results(results_dict, ref_headline, metrics_calc):
         """Render results in 3-column layout with metrics"""
         st.divider()
@@ -265,89 +329,195 @@ class UIComponents:
         cols = st.columns(3)
 
         display_map = [
-            ("TextRank + Gemini", "tr"),
-            ("mBART + Gemini", "mb"),
-            ("Hybrid + Gemini", "hy"),
+            ("TextRank", "tr_base", "tr"),
+            ("mBART", "mb_base", "mb"),
+            ("Hybrid", "hy_base", "hy"),
         ]
 
-        for i, (name, key) in enumerate(display_map):
+        for i, (name, base_key, refined_key) in enumerate(display_map):
             with cols[i]:
                 st.markdown(f'<span class="neon-pill pill-purple">Strategy 0{i+1}</span>', unsafe_allow_html=True)
                 st.subheader(name)
 
-                # Editable text area
-                edited = st.text_area(
-                    f"Edit Output",
-                    results_dict[key],
-                    key=f"edit_{key}",
-                    height=120,
-                    label_visibility="collapsed",
+                original = st.text_area(
+                    "Original model headline",
+                    results_dict[base_key],
+                    key=f"original_{refined_key}",
+                    height=100,
                 )
 
-                # Show metrics if reference exists
-                if ref_headline:
-                    bleu, rouge = metrics_calc.calculate(edited, ref_headline)
+                refined = st.text_area(
+                    "Gemini-refined headline",
+                    results_dict[refined_key],
+                    key=f"refined_{refined_key}",
+                    height=120,
+                )
 
-                    m_col1, m_col2 = st.columns(2)
-                    with m_col1:
-                        st.markdown(
-                            f"""
-                            <div class="metric-card">
-                                <div class="metric-title">BLEU</div>
-                                <div class="metric-value">{bleu}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                    with m_col2:
-                        st.markdown(
-                            f"""
-                            <div class="metric-card">
-                                <div class="metric-title">ROUGE-L</div>
-                                <div class="metric-value">{rouge}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+                if ref_headline:
+                    original_scores = metrics_calc.calculate(original, ref_headline)
+                    refined_scores = metrics_calc.calculate(refined, ref_headline)
+
+                    UIComponents.render_metric_list("Original metrics", original_scores)
+                    UIComponents.render_metric_list("Refined metrics", refined_scores)
                 else:
                     st.markdown(
                         """
                         <div class="info-callout">
-                            Enter a reference headline in sidebar to reveal BLEU & ROUGE accuracy scores.
+                            Enter a reference headline to reveal the metrics.
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
 
     @staticmethod
-    def render_final_selection():
-        """render final model selection radio and log button"""
+    def render_human_evaluation(
+        results_dict,
+        selected_style,
+        article_body,
+        reference_headline,
+    ):
+        """Collect and persist ratings for all generated model headlines."""
+        from backend.storage.evaluation_store import (
+            get_evaluations,
+            save_evaluations,
+        )
+
         st.divider()
 
         st.markdown(
             """
             <div class="section-header">
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                <span>Human Evaluation & Logging</span>
+                <span>Human Evaluation</span>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-        col1, col2 = st.columns([2, 1])
+        st.caption("Rate all three model outputs using a 5-point Likert scale.")
 
-        with col1:
-            final_choice = st.radio(
-                "Select candidate variation with optimal accuracy:",
-                ["TextRank", "mBART", "Hybrid"],
-                horizontal=True,
+        version = st.radio(
+            "Headline version",
+            ["Original model output", "Gemini-refined output"],
+            horizontal=True,
+        )
+
+        rating_options = [1, 2, 3, 4, 5]
+        rating_labels = {
+            1: "1 - Very poor",
+            2: "2 - Poor",
+            3: "3 - Fair",
+            4: "4 - Good",
+            5: "5 - Excellent",
+        }
+
+        def rating_label(value):
+            return rating_labels[value]
+
+        models = [
+            ("TextRank", "tr_base", "tr"),
+            ("mBART", "mb_base", "mb"),
+            ("Hybrid", "hy_base", "hy"),
+        ]
+        headline_version_key = 1 if version == "Gemini-refined output" else 0
+        ratings = []
+
+        with st.form("human_evaluation_form"):
+            columns = st.columns(3)
+
+            for column, (method, original_key, refined_key) in zip(columns, models):
+                with column:
+                    headline_key = (original_key, refined_key)[headline_version_key]
+                    headline = st.text_area(
+                        f"{method} headline",
+                        results_dict[headline_key],
+                        key=f"evaluation_headline_{method}",
+                        height=100,
+                    )
+                    relevance = st.select_slider(
+                        "Relevance",
+                        options=rating_options,
+                        value=3,
+                        format_func=rating_label,
+                        key=f"evaluation_relevance_{method}",
+                    )
+                    accuracy = st.select_slider(
+                        "Accuracy",
+                        options=rating_options,
+                        value=3,
+                        format_func=rating_label,
+                        key=f"evaluation_accuracy_{method}",
+                    )
+                    readability = st.select_slider(
+                        "Readability",
+                        options=rating_options,
+                        value=3,
+                        format_func=rating_label,
+                        key=f"evaluation_readability_{method}",
+                    )
+                    conciseness = st.select_slider(
+                        "Conciseness",
+                        options=rating_options,
+                        value=3,
+                        format_func=rating_label,
+                        key=f"evaluation_conciseness_{method}",
+                    )
+                    ratings.append({
+                        "method": method,
+                        "version": version,
+                        "headline": headline,
+                        "relevance": relevance,
+                        "accuracy": accuracy,
+                        "readability": readability,
+                        "conciseness": conciseness,
+                    })
+
+            submitted = st.form_submit_button(
+                "Save All Evaluations",
+                use_container_width=True,
             )
 
-        with col2:
-            st.write(" ")
-            st.write(" ")
-            if st.button("Log Selection", use_container_width=True):
-                st.toast(f"Assessment logged: {final_choice}", icon="")
-                st.success(f"Logged {final_choice} for evaluation.")
+        if submitted:
+            timestamp = datetime.now(timezone.utc).isoformat()
+            records = []
+            for rating in ratings:
+                rating.update({
+                    "timestamp_utc": timestamp,
+                    "tone": selected_style,
+                    "article": article_body,
+                    "reference_headline": reference_headline,
+                    "average_score": round(
+                        (
+                            rating["relevance"]
+                            + rating["accuracy"]
+                            + rating["readability"]
+                            + rating["conciseness"]
+                        ) / 4,
+                        2,
+                    ),
+                })
+                records.append(rating)
 
-        return final_choice
+            try:
+                save_evaluations(records)
+                st.success("All three model evaluations were saved to MongoDB.")
+            except Exception as error:
+                st.error(f"Could not save evaluations: {error}")
+
+        try:
+            evaluations = get_evaluations()
+        except Exception:
+            evaluations = []
+
+        if evaluations:
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=evaluations[0].keys())
+            writer.writeheader()
+            writer.writerows(evaluations)
+            st.download_button(
+                "Download Evaluations CSV",
+                output.getvalue(),
+                file_name="human_evaluations.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )

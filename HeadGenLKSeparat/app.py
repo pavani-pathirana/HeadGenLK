@@ -59,6 +59,10 @@ def main():
                     mb_base = mbart_gen.generate(article_body)
                     ext_context = textrank.extract(article_body, top_n=2)
                     hy_base = mbart_gen.generate(ext_context)
+
+                    st.session_state["tr_base"] = tr_base
+                    st.session_state["mb_base"] = mb_base
+                    st.session_state["hy_base"] = hy_base
                     
                     # Step 2: Refine tone via Gemini
                     st.info(" Step 2: Refining tone with Gemini API...")
@@ -76,7 +80,17 @@ def main():
     # Results Display
     if 'tr' in st.session_state:
         UIComponents.render_results(st.session_state, ref_headline, metrics_calc)
-        UIComponents.render_final_selection()
+
+        if st.button("Evaluate All Models", use_container_width=True):
+            st.session_state["show_evaluation"] = True
+
+        if st.session_state.get("show_evaluation", False):
+            UIComponents.render_human_evaluation(
+                st.session_state,
+                selected_style,
+                article_body,
+                ref_headline,
+            )
          
     # Footer
          

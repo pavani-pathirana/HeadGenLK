@@ -27,7 +27,8 @@ class ToneRefiner:
             return headline
         
         try:
-            gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+            gemini_model = genai.GenerativeModel("gemini-3.1-flash-lite")
+            #gemini_model = genai.GenerativeModel("gemini-2.5-flash")
             prompt = self._build_prompt(headline, tone)
             response = gemini_model.generate_content(prompt)
             return response.text.strip()
@@ -37,13 +38,27 @@ class ToneRefiner:
     
     @staticmethod
     def _build_prompt(headline, tone):
-        """Build prompt for Gemini API"""
+        """Build a style-specific prompt for Gemini API"""
+        style_instruction = STYLE_PROMPTS.get(
+            tone,
+            "Use clear and accurate Sinhala news language.",
+        )
+
         return f"""
 You are a professional Sinhala news editor.
-Convert the following Sinhala news headline into a '{tone}' style.
-- Keep the core meaning exactly the same.
-- Output ONLY the converted headline in Sinhala.
-- Do not add any English text or explanations.
+Rewrite the following Sinhala news headline using this style:
+Style: {tone}
+Instruction: {style_instruction}
 
-Original Headline: {headline}
-{tone} Headline:"""
+Rules:
+- Keep the original facts and meaning unchanged.
+- Output ONLY one Sinhala headline.
+- Do not add explanations.
+- Do not invent names, dates, locations, or events.
+- Keep the headline concise.
+
+Original headline:
+{headline}
+
+Rewritten headline:
+"""
