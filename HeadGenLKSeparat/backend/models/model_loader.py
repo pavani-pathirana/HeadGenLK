@@ -2,7 +2,7 @@
 
 import streamlit as st
 import torch
-from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
+from transformers import MBartForConditionalGeneration, MBart50Tokenizer
 from peft import PeftModel
 from backend.utils.config import (
     BASE_MODEL_PATH,
@@ -18,7 +18,7 @@ def load_models():
     torch_dtype = torch.float16 if device == "cuda" else torch.float32
     
     # Load tokenizer
-    tokenizer = MBart50TokenizerFast.from_pretrained(BASE_MODEL_PATH)
+    tokenizer = MBart50Tokenizer.from_pretrained(BASE_MODEL_PATH)
     tokenizer.src_lang = "si_LK"
     tokenizer.tgt_lang = "si_LK"
     
